@@ -177,9 +177,3 @@ function renderPagination(currentPage, totalPages) {
 function printReport() {
     alert('Fungsi Mencetak Laporan sedang disiapkan...');
 }
-function printHistory() {
-    alert('Fungsi Mencetak Riwayat sedang disiapkan...');
-}
-function viewStruk(id) {
-    alert('Menampilkan detail struk untuk TRX' + id);
-}

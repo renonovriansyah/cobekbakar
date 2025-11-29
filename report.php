@@ -114,15 +114,6 @@ require_once 'config.php';
 
                 <label for="date-end"></label>
                 <input type="date" id="date-end" onchange="generateReport()">
-
-                <div class="action-buttons-group">
-                    <button class="primary-btn" onclick="generateReport()">
-                        <i class="fas fa-filter"></i> Tampilkan
-                    </button>
-                    <button class="export-btn" onclick="printReport()">
-                        <i class="fas fa-print"></i> Cetak Laporan
-                    </button>
-                </div>
             </div>
 
                 <h2>Ringkasan Kinerja Periode</h2>
