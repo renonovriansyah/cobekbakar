@@ -475,3 +475,99 @@ header h1 {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+.report-controls {
+    /* ... (properti lama: display: flex, gap, padding, dll.) ... */
+    justify-content: space-between; /* Untuk memisahkan filter dan tombol aksi */
+    align-items: center;
+}
+
+/* Penataan Khusus untuk Tombol Tampilkan & Cetak */
+.action-buttons-group {
+    display: flex;
+    gap: 10px; /* Jarak antar tombol */
+    margin-left: auto; /* Memastikan grup tombol pindah ke kanan */
+}
+
+.report-controls {
+    display: flex; /* Utama: Mengaktifkan flexbox */
+    gap: 15px;
+    align-items: center; /* Selaraskan vertikal di tengah */
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-inputs-group {
+    display: flex;
+    gap: 10px; /* Jarak antara filter */
+    align-items: center;
+}
+
+.action-buttons-group {
+    display: flex;
+    gap: 10px;
+    margin-left: auto; /* PENTING: Mendorong grup tombol ke sisi kanan */
+}
+
+/* Selaraskan Tinggi Input/Select dengan Tombol */
+.report-controls input[type="date"],
+.report-controls select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    height: 40px; /* Tinggi seragam */
+}
+
+/* Penataan Khusus Tombol (Memastikan lebar terkontrol) */
+.report-controls button {
+    height: 40px; 
+    padding: 0 15px; 
+    font-size: 1em;
+    /* Tambahan: Pastikan tombol Tampilkan tidak menggunakan seluruh ruang */
+    flex-shrink: 0; 
+    min-width: 120px;
+    box-sizing: border-box;
+}
+
+/* Tambahan agar tombol Cetak Laporan terlihat berbeda */
+.export-btn {
+    background-color: #6c757d; /* Warna abu-abu netral */
+    color: white;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.export-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Pastikan Tombol Utama (Tampilkan) menggunakan warna primary */
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+/* FILE: style.css (Modifikasi/Tambahkan) */
+
+.report-area h2 {
+    /* Beri jarak yang jelas di atas metrik */
+    margin-top: 30px; 
+    margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 1.5em; 
+    color: var(--text-color);
+}
+
+/* Rapikan display angka nol */
+.report-summary-card h3 {
+    /* Angka yang besar */
+    font-size: 1.8em; 
+    font-weight: 700;
+}
+
+.secondary-kpi h3 { 
+    color: var(--secondary-color); /* Beri warna aksen yang jelas */
+}

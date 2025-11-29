@@ -93,7 +93,15 @@ switch ($method) {
 
         $sql = "UPDATE produk SET nama_produk = ?, harga = ?, stok = ? WHERE id_produk = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sdi", $nama, $harga, $stok, $id_produk);
+        
+        // KOREKSI: Mengubah "sdi" menjadi "sdii" (string, double, integer, integer)
+        if (!$stmt->bind_param("sdii", $nama, $harga, $stok, $id_produk)) {
+            // Menambahkan error handling yang lebih baik
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Gagal mengikat parameter: " . $stmt->error]);
+            $stmt->close();
+            break;
+        }
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Produk berhasil diperbarui."]);

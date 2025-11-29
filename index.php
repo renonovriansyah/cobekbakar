@@ -47,7 +47,7 @@ require_once 'config.php';
                 
                 <div class="product-selection">
                     <div class="search-bar-container">
-                        <input type="text" id="product-search" placeholder="Cari Produk (Nama/Kode) untuk Input Cepat..." autofocus>
+                        <input type="text" id="product-search" placeholder="Cari Produk..." autofocus>
                         <i class="fas fa-search"></i>
                     </div>
 

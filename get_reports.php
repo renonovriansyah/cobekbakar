@@ -1,5 +1,5 @@
 <?php
-// FILE: get_reports.php
+// FILE: get_reports.php (Koreksi Logika Final)
 
 session_start();
 
@@ -14,12 +14,13 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 // --- PENGATURAN PAGINATION DAN FILTER ---
-$limit = 15; // Batasan tampilan 15 transaksi per halaman
+$limit = 15;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
 $date_start = $_GET['start'] ?? date('Y-m-d', strtotime('-7 days'));
 $date_end = $_GET['end'] ?? date('Y-m-d');
+$summary_only = isset($_GET['summary_only']) && $_GET['summary_only'] === 'true';
 
 $response = [
     'success' => true,
@@ -31,7 +32,7 @@ $response = [
 ];
 
 try {
-    // 1. QUERY TOTAL PENDAPATAN
+    // 1. QUERY TOTAL PENDAPATAN (Wajib untuk semua)
     $sql_income = "SELECT SUM(total_biaya) AS total FROM transaksi WHERE tanggal BETWEEN ? AND ?";
     $stmt_income = $conn->prepare($sql_income);
     $stmt_income->bind_param("ss", $date_start, $date_end);
@@ -40,15 +41,35 @@ try {
     $response['total_income'] = (float)($result_income['total'] ?? 0);
     $stmt_income->close();
 
-    // 2. QUERY TOTAL TRANSAKSI (untuk Pagination)
+    
+    // 2. QUERY TOTAL TRANSAKSI (Wajib untuk semua, juga dipakai untuk summary/pagination)
     $sql_count = "SELECT COUNT(id_transaksi) AS total FROM transaksi WHERE tanggal BETWEEN ? AND ?";
     $stmt_count = $conn->prepare($sql_count);
     $stmt_count->bind_param("ss", $date_start, $date_end);
     $stmt_count->execute();
     $result_count = $stmt_count->get_result()->fetch_assoc();
     $response['total_transactions'] = (int)($result_count['total'] ?? 0);
-    $response['total_pages'] = ceil($response['total_transactions'] / $limit);
     $stmt_count->close();
+
+    // --- KONTROL LOGIKA: EXIT jika hanya butuh SUMMARY (Report.php) ---
+    if ($summary_only) {
+        $total_income = $response['total_income'];
+        $total_trans = $response['total_transactions'];
+        
+        // Hitung rata-rata
+        $response['avg_transaction'] = ($total_trans > 0) ? round($total_income / $total_trans) : 0;
+        
+        // Kirim response dan keluar
+        echo json_encode($response);
+        $conn->close();
+        exit;
+    }
+    // -----------------------------------------------------------------
+
+    // --- LOGIKA HISTORY.PHP (Hanya dijalankan jika summary_only=false) ---
+    
+    // Hitung total halaman untuk pagination
+    $response['total_pages'] = ceil($response['total_transactions'] / $limit);
 
     // 3. QUERY RIWAYAT TRANSAKSI (dengan JOIN dan Pagination)
     $sql_transactions = "
@@ -94,4 +115,3 @@ try {
 
 $conn->close();
 echo json_encode($response);
-?>

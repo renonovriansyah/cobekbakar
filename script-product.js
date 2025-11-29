@@ -43,7 +43,7 @@ function renderProductTable(products) {
             <td>${product.stok}</td>
             <td>
                 <button class="action-btn edit" onclick="openProductModal('edit', ${product.id_produk})"><i class="fas fa-edit"></i> Ubah</button>
-                <button class="action-btn delete" onclick="deleteProduct(${product.id_produk})"><i class="fas fa-trash"></i> Hapus</button>
+                <button class="action-btn delete" onclick="deleteProduct(${product.id_produk}, '${product.nama_produk}')"><i class="fas fa-trash"></i> Hapus</button>
             </td>
         `;
     });
@@ -139,8 +139,9 @@ document.getElementById('product-form').addEventListener('submit', async functio
 // C. DELETE: Menghapus Produk
 // --------------------------------------------------------
 
-async function deleteProduct(productId) {
-    if (!confirm(`Anda yakin ingin menghapus Produk ID: ${productId}? Aksi ini tidak dapat dibatalkan.`)) {
+async function deleteProduct(productId, productName) {
+    // KOREKSI PESAN KONFIRMASI: Mengganti ID dengan Nama Produk
+    if (!confirm(`Anda yakin ingin menghapus produk "${productName}"? Aksi ini tidak dapat dibatalkan.`)) {
         return;
     }
 
