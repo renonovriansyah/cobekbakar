@@ -1,5 +1,5 @@
 <?php
-// FILE: proses_transaksi.php
+// FILE: proses_transaksi.php (FINAL DENGAN PENYIMPANAN UANG TUNAI)
 
 session_start();
 
@@ -20,16 +20,17 @@ $data = json_decode($json_data, true);
 // Validasi data
 $total_biaya = $data['total_biaya'] ?? 0;
 $uang_diterima = $data['uang_diterima'] ?? 0;
+$kembalian = $uang_diterima - $total_biaya; // Hitung kembalian di sini
 $detail_pesanan = $data['detail_pesanan'] ?? [];
 $id_user = $_SESSION['id_user'];
 
-if (empty($detail_pesanan) || $total_biaya <= 0) {
-    echo json_encode(["success" => false, "error" => "Data transaksi tidak valid atau kosong."]);
+if (empty($detail_pesanan) || $total_biaya <= 0 || $kembalian < 0) {
+    echo json_encode(["success" => false, "error" => "Data transaksi tidak valid atau uang diterima kurang."]);
     exit;
 }
 
 // ------------------------------------------
-// 1. MULAI TRANSAKSI DATABASE (ACID)
+// 1. MULAI TRANSAKSI DATABASE
 // ------------------------------------------
 $conn->begin_transaction();
 $transaksi_berhasil = false;
@@ -37,13 +38,15 @@ $id_transaksi = null;
 
 try {
     // A. Masukkan data ke tabel TRANSAKSI
-    $sql_transaksi = "INSERT INTO transaksi (tanggal, jam, total_biaya, id_user) VALUES (?, ?, ?, ?)";
+    // PENAMBAHAN KOLOM: uang_diterima, kembalian
+    $sql_transaksi = "INSERT INTO transaksi (tanggal, jam, total_biaya, uang_diterima, kembalian, id_user) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt_transaksi = $conn->prepare($sql_transaksi);
     
     $tanggal = date("Y-m-d");
     $jam = date("H:i:s");
     
-    $stmt_transaksi->bind_param("ssdi", $tanggal, $jam, $total_biaya, $id_user);
+    // BIND PARAM BARU: ssdddi (string, string, double, double, double, integer)
+    $stmt_transaksi->bind_param("ssdddi", $tanggal, $jam, $total_biaya, $uang_diterima, $kembalian, $id_user);
     $stmt_transaksi->execute();
     $id_transaksi = $conn->insert_id; // Ambil ID transaksi yang baru dibuat
     $stmt_transaksi->close();
@@ -52,7 +55,7 @@ try {
         throw new Exception("Gagal mendapatkan ID Transaksi baru.");
     }
     
-    // B. Masukkan data ke tabel DETAIL_TRANSAKSI dan Kurangi Stok
+    // B. Masukkan data ke tabel DETAIL_TRANSAKSI dan Kurangi Stok (kode Anda yang lain)
     $sql_detail = "INSERT INTO detail_transaksi (id_transaksi, id_produk, jumlah, subtotal) VALUES (?, ?, ?, ?)";
     $stmt_detail = $conn->prepare($sql_detail);
     

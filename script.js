@@ -221,13 +221,26 @@ function clearCart() {
     renderCart();
 }
 
-// 4. Fungsi Cetak Struk (Simulasi Aksi)
+/**
+ * Membuka jendela pop-up dan memicu cetak struk
+ * @param {number} transactionId ID transaksi yang baru dibuat
+ */
 function printStruk(transactionId) {
-    // Berdasarkan SRS, ini harus terintegrasi dengan printer struk.
-    // Di sini kita hanya menampilkan notifikasi.
-    console.log(`Mencetak Struk untuk Transaksi ID: ${transactionId}`);
-    // Logika cetak ke perangkat keras/driver akan diimplementasikan di backend.
-    alert(`Struk Transaksi #${transactionId} telah dikirim ke printer.`);
+    const url = 'struk.php?id=' + transactionId;
+
+    // Buka jendela baru dengan ukuran tipis seperti struk POS
+    const receiptWindow = window.open(url, '_blank', 'width=350,height=600,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
+
+    if (receiptWindow) {
+        // Setelah jendela dimuat, panggil fungsi cetak browser
+        receiptWindow.onload = function() {
+            setTimeout(() => {
+                receiptWindow.print();
+            }, 500); 
+        };
+    } else {
+        alert("Gagal membuka jendela struk. Pastikan pop-up diizinkan.");
+    }
 }
 
 

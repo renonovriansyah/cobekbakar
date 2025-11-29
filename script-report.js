@@ -122,7 +122,11 @@ function renderTransactionTable(transactions) {
     transactions.forEach(t => {
         const row = tableBody.insertRow();
         // Aksi dummy untuk detail struk
-        const actionHtml = `<button class="action-btn edit" onclick="viewStruk(${t.id_transaksi})">Lihat Detail</button>`;
+        const actionHtml = `
+        <button class="action-btn print" onclick="printReceipt(${t.id_transaksi})">
+            <i class="fas fa-print"></i> Struk
+        </button>
+        `;
         
         row.innerHTML = `
             <td>TRX${t.id_transaksi.toString().padStart(5, '0')}</td>
@@ -173,3 +177,15 @@ function renderPagination(currentPage, totalPages) {
     paginationDiv.appendChild(nextBtn);
 }
 
+function printReceipt(transactionId) {
+    const url = 'struk.php?id=' + transactionId;
+    const receiptWindow = window.open(url, '_blank', 'width=350,height=600,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
+
+    if (receiptWindow) {
+        receiptWindow.onload = function() {
+            setTimeout(() => {
+                receiptWindow.print();
+            }, 500); 
+        };
+    }
+}
