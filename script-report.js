@@ -179,13 +179,11 @@ function renderPagination(currentPage, totalPages) {
 
 function printReceipt(transactionId) {
     const url = 'struk.php?id=' + transactionId;
+    
+    // Buka jendela baru tanpa memicu cetak otomatis
     const receiptWindow = window.open(url, '_blank', 'width=350,height=600,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
 
     if (receiptWindow) {
-        receiptWindow.onload = function() {
-            setTimeout(() => {
-                receiptWindow.print();
-            }, 500); 
-        };
+        // HAPUS: logic onload dan window.print()
     }
 }

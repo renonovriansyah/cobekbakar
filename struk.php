@@ -64,6 +64,7 @@ function formatRupiah($angka) {
     <title>Struk Transaksi #<?php echo $id_transaksi; ?></title>
     
     <style>
+        /* Tampilan yang disukai: minimalis, meniru POS thermal */
         body {
             font-family: 'Consolas', monospace; 
             font-size: 11px; 
@@ -86,9 +87,14 @@ function formatRupiah($angka) {
         .summary-row.total { font-size: 1.1em; font-weight: bold; padding-top: 5px; border-top: 1px dashed #000; margin-top: 5px;}
         .detail { margin-bottom: 10px; }
         
+        /* Media query memastikan elemen no-print hanya hilang saat mencetak */
         @media print {
-            body { font-size: 10px; padding: 0; }
             .no-print { display: none; }
+            body { 
+                font-size: 10px; 
+                padding: 0; 
+                margin: 0;
+            }
         }
     </style>
 </head>
@@ -96,7 +102,7 @@ function formatRupiah($angka) {
     <div class="receipt-container">
         <div class="header">
             <h3>COBEK BAKAR</h3>
-            <p>Jl. Contoh No. 123, Jambi</p>
+            <p>Jl. Mulu Jadian Kagak No. 123, Jambi</p>
             <p>Telp: 0812-3456-7890</p>
         </div>
         

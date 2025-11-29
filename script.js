@@ -232,17 +232,13 @@ function printStruk(transactionId) {
     const receiptWindow = window.open(url, '_blank', 'width=350,height=600,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
 
     if (receiptWindow) {
-        // Setelah jendela dimuat, panggil fungsi cetak browser
-        receiptWindow.onload = function() {
-            setTimeout(() => {
-                receiptWindow.print();
-            }, 500); 
-        };
+        // HAPUS: receiptWindow.onload = function() { ... }
+        // HAPUS: Panggilan window.print()
+        // KETERANGAN: Pengguna akan melihat tombol "Cetak Ulang Struk" di struk.php
     } else {
         alert("Gagal membuka jendela struk. Pastikan pop-up diizinkan.");
     }
 }
-
 
 // --------------------------------------------------------
 // D. INISIALISASI
