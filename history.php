@@ -58,10 +58,6 @@ require_once 'config.php';
 
                     <label for="date-end">Sampai:</label>
                     <input type="date" id="date-end" onchange="generateHistory(1)">
-
-                    <button class="export-btn" onclick="printHistory()">
-                        <i class="fas fa-print"></i> Cetak Riwayat
-                    </button>
                 </div>
 
                 <h2>Daftar Transaksi Rinci</h2>

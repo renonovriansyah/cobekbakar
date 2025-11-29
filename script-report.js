@@ -173,7 +173,3 @@ function renderPagination(currentPage, totalPages) {
     paginationDiv.appendChild(nextBtn);
 }
 
-
-function printReport() {
-    alert('Fungsi Mencetak Laporan sedang disiapkan...');
-}
