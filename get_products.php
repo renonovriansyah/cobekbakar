@@ -17,7 +17,7 @@ require_once 'config.php'; // Sertakan koneksi database
 header('Content-Type: application/json');
 
 // Query untuk mengambil semua produk yang tersedia
-$sql = "SELECT id_produk, nama_produk, harga, stok FROM produk WHERE stok > 0 ORDER BY nama_produk ASC";
+$sql = "SELECT id_produk, nama_produk, harga, stok, diskon_jual FROM produk WHERE stok > 0 ORDER BY nama_produk ASC";
 
 $result = $conn->query($sql);
 $products = [];
@@ -25,8 +25,8 @@ $products = [];
 if ($result) {
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
-            // Konversi harga ke format float yang sesuai untuk JS
             $row['harga'] = (float)$row['harga'];
+            $row['diskon_jual'] = (int)$row['diskon_jual'];
             $products[] = $row;
         }
     }

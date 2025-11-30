@@ -187,3 +187,25 @@ function printReceipt(transactionId) {
         // HAPUS: logic onload dan window.print()
     }
 }
+
+function printReport() {
+    // Ambil filter tanggal dari input
+    const periodFilter = document.getElementById('period-filter').value;
+    const { start, end } = updateDateFilters(periodFilter); // Menggunakan fungsi yang sudah ada
+
+    const url = `cetak_laporan.php?start=${start}&end=${end}`; 
+
+    // Buka jendela baru untuk menampilkan dan mencetak laporan
+    const reportWindow = window.open(url, '_blank');
+
+    if (reportWindow) {
+        // Otomatis memicu cetak setelah laporan dimuat
+        reportWindow.onload = function() {
+            setTimeout(() => {
+                reportWindow.print();
+            }, 500); 
+        };
+    } else {
+        alert("Gagal membuka jendela laporan. Pastikan pop-up diizinkan.");
+    }
+}

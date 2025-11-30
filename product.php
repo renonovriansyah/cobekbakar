@@ -29,7 +29,7 @@ require_once 'config.php';
             <nav class="main-nav">
                 <a href="index.php" class="nav-item"><i class="fas fa-cash-register"></i> Input Pesanan</a>
                 <a href="product.php" class="nav-item active"><i class="fas fa-box"></i> Kelola Produk</a>
-                <a href="report.php" class="nav-item"><i class="fas fa-history"></i> Riwayat Transaksi</a>
+                <a href="history.php" class="nav-item"><i class="fas fa-history"></i> Riwayat Transaksi</a>
                 <a href="report.php" class="nav-item"><i class="fas fa-chart-bar"></i> Laporan Penjualan</a>
             </nav>
             <div class="user-info">
@@ -57,8 +57,10 @@ require_once 'config.php';
                         <tr>
                             <th>ID Produk</th>
                             <th>Nama Produk</th>
+                            <th>Kategori</th> 
                             <th>Harga Jual</th>
                             <th>Stok</th>
+                            <th>Diskon</th> 
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -79,8 +81,20 @@ require_once 'config.php';
                     <input type="text" id="product-name" name="nama_produk" required>
                 </div>
                 <div class="input-group">
+                <label for="product-category">Kategori Produk</label>
+                    <select id="product-category" name="kategori" required>
+                        <option value="Makanan">Makanan</option>
+                        <option value="Minuman">Minuman</option>
+                        <option value="Tambahan">Tambahan</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label for="product-price">Harga Jual (Rp)</label>
                     <input type="number" id="product-price" name="harga" required min="100">
+                </div>
+                <div class="input-group">
+                    <label for="product-discount">Diskon Jual (%)</label>
+                    <input type="number" id="product-discount" name="diskon_jual" required min="0" max="100" value="0">
                 </div>
                 <div class="input-group">
                     <label for="product-stock">Stok</label>

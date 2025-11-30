@@ -1,5 +1,5 @@
 <?php
-// FILE: proses_produk.php
+// FILE: proses_produk.php (VERSI FINAL DENGAN DISKON DAN KATEGORI)
 
 session_start();
 
@@ -16,7 +16,7 @@ header('Content-Type: application/json');
 // Mendapatkan metode HTTP
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Mendapatkan data input
+// Mendapatkan data input dari body (untuk POST/PUT)
 $input = json_decode(file_get_contents('php://input'), true);
 
 switch ($method) {
@@ -24,9 +24,12 @@ switch ($method) {
         // --- READ: Mengambil semua produk ---
         $id_produk = $_GET['id'] ?? null;
         
+        // SQL HARUS MENYERTAKAN KOLOM BARU (kategori, diskon_jual)
+        $select_fields = "id_produk, nama_produk, harga, stok, kategori, diskon_jual";
+        
         if ($id_produk) {
             // Ambil detail satu produk
-            $sql = "SELECT id_produk, nama_produk, harga, stok FROM produk WHERE id_produk = ?";
+            $sql = "SELECT {$select_fields} FROM produk WHERE id_produk = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $id_produk);
             $stmt->execute();
@@ -34,7 +37,9 @@ switch ($method) {
             $produk = $result->fetch_assoc();
             
             if ($produk) {
+                // Konversi tipe data untuk JS
                 $produk['harga'] = (float)$produk['harga'];
+                $produk['diskon_jual'] = (int)$produk['diskon_jual'];
                 echo json_encode(["success" => true, "data" => $produk]);
             } else {
                 echo json_encode(["success" => false, "message" => "Produk tidak ditemukan."]);
@@ -42,11 +47,13 @@ switch ($method) {
             $stmt->close();
         } else {
             // Ambil semua produk
-            $sql = "SELECT id_produk, nama_produk, harga, stok FROM produk ORDER BY id_produk DESC";
+            $sql = "SELECT {$select_fields} FROM produk ORDER BY id_produk DESC";
             $result = $conn->query($sql);
             $produk_list = [];
             while ($row = $result->fetch_assoc()) {
+                // Konversi tipe data untuk JS
                 $row['harga'] = (float)$row['harga'];
+                $row['diskon_jual'] = (int)$row['diskon_jual'];
                 $produk_list[] = $row;
             }
             echo json_encode(["success" => true, "data" => $produk_list]);
@@ -58,6 +65,8 @@ switch ($method) {
         $nama = $input['nama_produk'] ?? '';
         $harga = $input['harga'] ?? 0;
         $stok = $input['stok'] ?? 0;
+        $kategori = $input['kategori'] ?? 'Makanan';
+        $diskon = $input['diskon_jual'] ?? 0;
 
         if (empty($nama) || $harga <= 0) {
             http_response_code(400);
@@ -65,9 +74,10 @@ switch ($method) {
             break;
         }
 
-        $sql = "INSERT INTO produk (nama_produk, harga, stok) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO produk (nama_produk, harga, stok, kategori, diskon_jual) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sdi", $nama, $harga, $stok);
+        // BIND PARAM: "sdisi" (string, double, integer, string, integer)
+        $stmt->bind_param("sdisi", $nama, $harga, $stok, $kategori, $diskon);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Produk baru berhasil ditambahkan.", "id" => $conn->insert_id]);
@@ -91,16 +101,19 @@ switch ($method) {
             break;
         }
 
-        $sql = "UPDATE produk SET nama_produk = ?, harga = ?, stok = ? WHERE id_produk = ?";
+        $kategori = $input['kategori'] ?? 'Makanan';
+        $diskon = $input['diskon_jual'] ?? 0;
+
+        $sql = "UPDATE produk SET nama_produk = ?, harga = ?, stok = ?, kategori = ?, diskon_jual = ? WHERE id_produk = ?";
+        
         $stmt = $conn->prepare($sql);
         
-        // KOREKSI: Mengubah "sdi" menjadi "sdii" (string, double, integer, integer)
-        if (!$stmt->bind_param("sdii", $nama, $harga, $stok, $id_produk)) {
-            // Menambahkan error handling yang lebih baik
-            http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Gagal mengikat parameter: " . $stmt->error]);
-            $stmt->close();
-            break;
+        // BIND PARAM: "sdisii" (string, double, integer, string, integer, integer)
+        if (!$stmt->bind_param("sdisii", $nama, $harga, $stok, $kategori, $diskon, $id_produk)) {
+             http_response_code(500);
+             echo json_encode(["success" => false, "message" => "Gagal mengikat parameter: " . $stmt->error]);
+             $stmt->close();
+             break;
         }
 
         if ($stmt->execute()) {
@@ -136,7 +149,7 @@ switch ($method) {
         break;
         
     default:
-        http_response_code(405); // Method Not Allowed
+        http_response_code(405);
         echo json_encode(["success" => false, "message" => "Metode tidak diizinkan."]);
         break;
 }

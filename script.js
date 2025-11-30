@@ -1,4 +1,4 @@
-// FILE: script.js (KODE LENGKAP)
+// FILE: script.js (KODE LENGKAP DENGAN PERHITUNGAN DISKON)
 
 let cart = {}; // Objek untuk menyimpan item di keranjang {product_id: {name, price, qty}}
 let PRODUCTS = []; // Array akan diisi dari database via AJAX
@@ -7,6 +7,7 @@ let PRODUCTS = []; // Array akan diisi dari database via AJAX
 const formatRupiah = (number) => {
     // Memastikan input adalah number sebelum format
     if (isNaN(number)) return 'Rp 0'; 
+    // Menggunakan Math.round untuk menghindari masalah floating point pada Rupiah (tanpa desimal)
     return 'Rp ' + Math.round(number).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 };
 
@@ -20,6 +21,7 @@ async function loadProducts() {
         const data = await response.json();
 
         if (response.ok) {
+            // Data produk kini berisi diskon_jual
             PRODUCTS = data;
             renderProductGrid(PRODUCTS);
         } else {
@@ -39,14 +41,22 @@ function renderProductGrid(products) {
     products.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        // Menggunakan id_produk yang dikembalikan dari PHP
         card.setAttribute('data-id', product.id_produk); 
         card.setAttribute('data-price', product.harga);
         card.setAttribute('onclick', `addItemToCart('${product.id_produk}')`);
         
+        let priceDisplay = formatRupiah(product.harga);
+        
+        // Tampilkan diskon jika ada
+        if (product.diskon_jual > 0) {
+            const diskon_percent = product.diskon_jual / 100;
+            const price_after_discount = product.harga * (1 - diskon_percent);
+            priceDisplay = `<del style="color:#888; font-size:0.8em;">${formatRupiah(product.harga)}</del> ${formatRupiah(price_after_discount)}`;
+        }
+
         card.innerHTML = `
             <h4>${product.nama_produk}</h4>
-            <p>${formatRupiah(product.harga)}</p>
+            <p>${priceDisplay}</p>
             <button class="add-btn"><i class="fas fa-plus"></i></button>
         `;
         grid.appendChild(card);
@@ -60,10 +70,16 @@ function renderProductGrid(products) {
 
 // 1. Menambahkan item ke keranjang
 function addItemToCart(productId) {
-    // Cari produk dari array PRODUCTS yang dimuat dari database
     const product = PRODUCTS.find(p => p.id_produk == productId);
     if (!product) return;
 
+    // Ambil nilai diskon, pastikan defaultnya 0 jika tidak ada
+    const diskon_jual = product.diskon_jual || 0; 
+    
+    // Hitung harga setelah diskon
+    const diskon_percent = diskon_jual / 100;
+    const price_after_discount = product.harga * (1 - diskon_percent);
+    
     if (cart[productId]) {
         cart[productId].qty += 1;
     } else {
@@ -71,13 +87,15 @@ function addItemToCart(productId) {
             id: product.id_produk,
             name: product.nama_produk, 
             price: product.harga, 
+            discount_percent: diskon_jual, // Pastikan ini aman
+            price_final: price_after_discount, // Harga satuan bersih
             qty: 1 
         };
     }
     renderCart();
 }
 
-// 2. Mengubah kuantitas
+// 2. Mengubah kuantitas (TETAP SAMA)
 function updateQuantity(productId, type) {
     if (cart[productId]) {
         if (type === 'plus') {
@@ -92,31 +110,51 @@ function updateQuantity(productId, type) {
     }
 }
 
-// 3. Menghapus item dari keranjang
+// 3. Menghapus item dari keranjang (TETAP SAMA)
 function removeItem(productId) {
     delete cart[productId];
     renderCart();
 }
 
-// 4. Menghitung total biaya keranjang
+// 4. Menghitung total biaya keranjang (MODIFIKASI)
 function calculateTotal() {
-    let subtotal = 0;
-    for (const id in cart) {
-        subtotal += cart[id].price * cart[id].qty;
-    }
-    return subtotal;
-}
+    let subtotal = 0; // Total harga kotor
+    let total_diskon = 0; // Total diskon yang diberikan
+    let grand_total = 0; // Total harga bersih (yang dibayar)
 
+    for (const id in cart) {
+        const item = cart[id];
+        const item_price_gross = item.price * item.qty;
+        const item_price_net = item.price_final * item.qty;
+        
+        subtotal += item_price_gross;
+        grand_total += item_price_net;
+        total_diskon += (item_price_gross - item_price_net);
+    }
+    
+    // Kembalikan semua nilai total yang dibutuhkan
+    return { subtotal, grand_total, total_diskon }; 
+}
 
 // 5. Merender (menampilkan) isi keranjang ke tabel
 function renderCart() {
     const cartBody = document.getElementById('cart-items-body');
-    let subtotal = calculateTotal();
-    cartBody.innerHTML = ''; // Kosongkan isi tabel
+    const { subtotal, grand_total, total_diskon } = calculateTotal(); 
+    cartBody.innerHTML = ''; 
 
     for (const id in cart) {
         const item = cart[id];
-        const itemSubtotal = item.price * item.qty;
+        
+        const itemSubtotalGross = item.price * item.qty;
+        
+        let subtotalCellContent = formatRupiah(itemSubtotalGross);
+        if (item.discount_percent > 0) {
+            const itemSubtotalNet = item.price_final * item.qty;
+            subtotalCellContent = `
+                <del style="color:#888; font-size:0.8em;">${formatRupiah(itemSubtotalGross)}</del><br>
+                ${formatRupiah(itemSubtotalNet)}
+            `;
+        }
 
         const row = cartBody.insertRow();
         row.innerHTML = `
@@ -127,46 +165,61 @@ function renderCart() {
                 ${item.qty}
                 <button class="qty-btn" onclick="updateQuantity('${id}', 'plus')">+</button>
             </td>
-            <td>${formatRupiah(itemSubtotal)}</td>
+            <td>${subtotalCellContent}</td>
             <td><button class="remove-btn" onclick="removeItem('${id}')"><i class="fas fa-times"></i></button></td>
         `;
     }
 
-    // Update display total
+    // Update display Subtotal (Harga kotor)
     document.getElementById('subtotal-display').textContent = formatRupiah(subtotal);
-    document.getElementById('grand-total-display').textContent = formatRupiah(subtotal);
+    
+    // PERBAIKAN: HANYA MENGISI KONTEN ke wadah permanen
+    const diskonRowContainer = document.getElementById('total-diskon-row');
+
+    if (diskonRowContainer) {
+         diskonRowContainer.innerHTML = `
+            <p>Total Diskon:</p> 
+            <p style="color: var(--primary-color); font-weight: bold;">- ${formatRupiah(total_diskon)}</p>
+        `;
+    } else {
+        // Jika container tidak ditemukan (hanya untuk debugging)
+        console.error("Elemen total-diskon-row tidak ditemukan di HTML.");
+    }
+
+    // Update Grand Total (Harga bersih)
+    document.getElementById('grand-total-display').textContent = formatRupiah(grand_total);
 
     // Hitung kembalian otomatis
     calculateChange();
 }
 
-
 // --------------------------------------------------------
 // C. FUNGSI PEMBAYARAN DAN PROSES
 // --------------------------------------------------------
 
-// 1. Menghitung kembalian (dipanggil saat input uang diterima berubah)
+// 1. Menghitung kembalian (MODIFIKASI: Gunakan grand_total)
 function calculateChange() {
-    let total = calculateTotal();
+    // Panggil calculateTotal dan ambil grand_total
+    const { grand_total } = calculateTotal(); // Pastikan ambil grand_total
 
     const cashInput = document.getElementById('cash-input').value;
     const cashReceived = parseInt(cashInput) || 0;
-    const change = cashReceived - total;
+    const change = cashReceived - grand_total; // Hitung kembalian dari grand_total
 
     document.getElementById('change-display').textContent = formatRupiah(change);
 
     // Aktifkan/Nonaktifkan tombol Proses Pembayaran
     const processBtn = document.getElementById('process-payment-btn');
-    if (total > 0 && change >= 0) {
+    if (grand_total > 0 && change >= 0) { // Gunakan grand_total untuk validasi
         processBtn.disabled = false;
     } else {
         processBtn.disabled = true;
     }
 }
 
-// 2. Memproses Pembayaran (Kirim data ke PHP)
+// 2. Memproses Pembayaran (Kirim data ke PHP) (MODIFIKASI)
 async function processPayment() {
-    const total = calculateTotal();
+    const { grand_total } = calculateTotal();
     const cashInput = document.getElementById('cash-input').value;
     const cashReceived = parseInt(cashInput) || 0;
     
@@ -176,10 +229,18 @@ async function processPayment() {
     }
 
     // Ubah objek cart menjadi array untuk pengiriman data
-    const cartArray = Object.values(cart);
+    const cartArray = Object.values(cart).map(item => ({
+        // Kirim semua detail yang dibutuhkan proses_transaksi.php
+        id: item.id,
+        qty: item.qty,
+        price_gross: item.price,
+        discount: item.discount_percent,
+        subtotal: item.price_final * item.qty,
+        price_final: item.price_final // Harga satuan setelah diskon
+    }));
 
     const paymentData = {
-        total_biaya: total,
+        total_biaya: grand_total, // KIRIM GRAND TOTAL
         uang_diterima: cashReceived,
         detail_pesanan: cartArray
     };
@@ -197,12 +258,14 @@ async function processPayment() {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert(`Transaksi Berhasil!\nTotal: ${formatRupiah(total)}\nKembalian: ${formatRupiah(cashReceived - total)}`);
+            alert(`Transaksi Berhasil!\nTotal: ${formatRupiah(grand_total)}\nKembalian: ${formatRupiah(cashReceived - grand_total)}`);
             
-            // Panggil fungsi cetak struk (simulasi)
+            // Panggil fungsi cetak struk
             printStruk(result.id_transaksi); 
 
             clearCart();
+            // Muat ulang produk untuk mengupdate stok
+            loadProducts(); 
         } else {
             alert(`Transaksi GAGAL: ${result.error}`);
             console.error("Detail Error Backend:", result.error);
@@ -214,7 +277,7 @@ async function processPayment() {
     }
 }
 
-// 3. Mengosongkan Keranjang
+// 3. Mengosongkan Keranjang (TETAP SAMA)
 function clearCart() {
     cart = {};
     document.getElementById('cash-input').value = '';
@@ -222,7 +285,7 @@ function clearCart() {
 }
 
 /**
- * Membuka jendela pop-up dan memicu cetak struk
+ * Membuka jendela pop-up dan memicu cetak struk (TETAP SAMA)
  * @param {number} transactionId ID transaksi yang baru dibuat
  */
 function printStruk(transactionId) {
@@ -232,21 +295,20 @@ function printStruk(transactionId) {
     const receiptWindow = window.open(url, '_blank', 'width=350,height=600,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
 
     if (receiptWindow) {
-        // HAPUS: receiptWindow.onload = function() { ... }
-        // HAPUS: Panggilan window.print()
-        // KETERANGAN: Pengguna akan melihat tombol "Cetak Ulang Struk" di struk.php
+        // Logika cetak otomatis dihapus, pengguna cetak manual dari pop-up
     } else {
         alert("Gagal membuka jendela struk. Pastikan pop-up diizinkan.");
     }
 }
 
 // --------------------------------------------------------
-// D. INISIALISASI
+// D. INISIALISASI (TETAP SAMA)
 // --------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
     loadProducts(); // Memuat data produk saat halaman dimuat
     renderCart();
+    
     // Tambahkan event listener untuk input pencarian (filter produk)
     document.getElementById('product-search').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase();

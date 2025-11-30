@@ -1,4 +1,4 @@
-// FILE: script-product.js (KODE LENGKAP)
+// FILE: script-product.js (KODE LENGKAP DENGAN DISKON DAN KATEGORI)
 
 let currentMode = 'add'; // State untuk menentukan mode form (add atau edit)
 const PRODUCT_ENDPOINT = 'proses_produk.php';
@@ -30,6 +30,7 @@ async function loadProducts() {
     }
 }
 
+// MODIFIKASI KRUSIAL: Menambahkan kolom Kategori dan Diskon ke tabel
 function renderProductTable(products) {
     const tableBody = document.getElementById('product-table-body');
     tableBody.innerHTML = '';
@@ -39,9 +40,9 @@ function renderProductTable(products) {
         row.innerHTML = `
             <td>P${product.id_produk.toString().padStart(3, '0')}</td>
             <td>${product.nama_produk}</td>
-            <td>${formatRupiah(product.harga)}</td>
+            <td>${product.kategori || '-'}</td> <td>${formatRupiah(product.harga)}</td>
             <td>${product.stok}</td>
-            <td>
+            <td>${product.diskon_jual || 0}%</td> <td>
                 <button class="action-btn edit" onclick="openProductModal('edit', ${product.id_produk})"><i class="fas fa-edit"></i> Ubah</button>
                 <button class="action-btn delete" onclick="deleteProduct(${product.id_produk}, '${product.nama_produk}')"><i class="fas fa-trash"></i> Hapus</button>
             </td>
@@ -53,6 +54,7 @@ function renderProductTable(products) {
 // B. CREATE & UPDATE: Modal dan Proses Form
 // --------------------------------------------------------
 
+// MODIFIKASI KRUSIAL: Mengisi nilai Kategori dan Diskon saat mode Edit
 async function openProductModal(mode, productId = null) {
     const modal = document.getElementById('product-modal');
     currentMode = mode;
@@ -60,7 +62,11 @@ async function openProductModal(mode, productId = null) {
     // Reset Form
     document.getElementById('product-form').reset();
     document.getElementById('product-id').value = '';
-
+    
+    // Pastikan input Diskon dan Kategori ada di product.php
+    const categoryInput = document.getElementById('product-category');
+    const discountInput = document.getElementById('product-discount');
+    
     if (mode === 'add') {
         document.getElementById('modal-title').textContent = 'Tambah Produk Baru';
         document.getElementById('modal-submit-btn').textContent = 'Simpan Data';
@@ -79,6 +85,11 @@ async function openProductModal(mode, productId = null) {
                 document.getElementById('product-name').value = product.nama_produk;
                 document.getElementById('product-price').value = product.harga;
                 document.getElementById('product-stock').value = product.stok;
+                
+                // BARU: Isi nilai Kategori dan Diskon
+                if (categoryInput) categoryInput.value = product.kategori || 'Makanan';
+                if (discountInput) discountInput.value = product.diskon_jual || 0;
+                
             } else {
                 alert("Gagal mengambil data produk: " + result.message);
                 return;
@@ -96,19 +107,23 @@ function closeProductModal() {
     document.getElementById('product-modal').style.display = 'none';
 }
 
+// MODIFIKASI KRUSIAL: Mengambil data Kategori dan Diskon dari form
 document.getElementById('product-form').addEventListener('submit', async function(event) {
     event.preventDefault();
     
     const formData = new FormData(this);
     const data = Object.fromEntries(formData.entries());
+    
+    // Konversi tipe data untuk dikirim ke PHP
     data.harga = parseFloat(data.harga);
     data.stok = parseInt(data.stok);
+    data.diskon_jual = parseInt(data.diskon_jual); // PASTIKAN DIKONVERSI KE INTEGER
 
     let method = currentMode === 'add' ? 'POST' : 'PUT';
     let url = PRODUCT_ENDPOINT;
 
     if (currentMode === 'edit') {
-        url += `?id=${data.id_produk}`; // Menggunakan query string untuk ID pada PUT/DELETE
+        url += `?id=${data.id_produk}`;
     }
 
     try {
@@ -140,7 +155,6 @@ document.getElementById('product-form').addEventListener('submit', async functio
 // --------------------------------------------------------
 
 async function deleteProduct(productId, productName) {
-    // KOREKSI PESAN KONFIRMASI: Mengganti ID dengan Nama Produk
     if (!confirm(`Anda yakin ingin menghapus produk "${productName}"? Aksi ini tidak dapat dibatalkan.`)) {
         return;
     }
@@ -174,14 +188,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Filter/Pencarian di Tabel Produk (Frontend Search)
     document.getElementById('search-product-input').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase();
-        // Memuat ulang produk untuk filtering (jika terlalu banyak data, ini harus di backend)
-        // Untuk saat ini, kita filter di frontend saja (efisiensi pada data kecil)
+        
+        // Perlu memuat ulang data atau menyaring data yang sudah ada (kita gunakan loadProducts lalu filter)
+        // Jika data sedikit, ini aman.
         loadProducts().then(() => {
             const tableBody = document.getElementById('product-table-body');
+            // Cek jika tabel kosong karena loadProducts gagal atau tidak ada data
+            if (!tableBody || tableBody.rows.length === 0) return;
+            
             const rows = tableBody.getElementsByTagName('tr');
             
             for (let i = 0; i < rows.length; i++) {
-                const productName = rows[i].cells[1].textContent.toLowerCase(); // Kolom Nama Produk
+                // Kolom Nama Produk berada di indeks 1
+                const productName = rows[i].cells[1].textContent.toLowerCase(); 
                 if (productName.includes(query)) {
                     rows[i].style.display = '';
                 } else {
