@@ -17,8 +17,9 @@ if (!$date_start || !$date_end) {
     die("Rentang tanggal tidak valid.");
 }
 
-// --- LOGIKA MENGAMBIL DATA SAMA SEPERTI DI get_reports.php (summary_only=true) ---
+// --- LOGIKA MENGAMBIL DATA RINGKASAN (SAMA SEPERTI get_reports.php?summary_only=true) ---
 
+// 1. Total Pendapatan
 $sql_income = "SELECT SUM(total_biaya) AS total FROM transaksi WHERE tanggal BETWEEN ? AND ?";
 $stmt_income = $conn->prepare($sql_income);
 $stmt_income->bind_param("ss", $date_start, $date_end);
@@ -27,6 +28,7 @@ $result_income = $stmt_income->get_result()->fetch_assoc();
 $total_income = (float)($result_income['total'] ?? 0);
 $stmt_income->close();
 
+// 2. Jumlah Transaksi
 $sql_count = "SELECT COUNT(id_transaksi) AS total FROM transaksi WHERE tanggal BETWEEN ? AND ?";
 $stmt_count = $conn->prepare($sql_count);
 $stmt_count->bind_param("ss", $date_start, $date_end);
@@ -51,6 +53,7 @@ function formatRupiah($angka) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Laporan Penjualan</title>
     <style>
+        /* Desain untuk cetak A4 */
         body { font-family: Arial, sans-serif; font-size: 12pt; padding: 30px; }
         h1, h2 { text-align: center; margin-bottom: 20px; }
         .summary-box { border: 1px solid #000; padding: 15px; margin-bottom: 30px; }
@@ -82,6 +85,8 @@ function formatRupiah($angka) {
     
     <p style="margin-top: 40px;">*Laporan ini hanya mencakup ringkasan penjualan, detail transaksi tersedia di sistem.</p>
 
-    <button class="no-print" onclick="window.print()">Cetak Halaman Ini</button>
+    <div style="text-align: center;" class="no-print">
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Cetak Laporan Ini</button>
+    </div>
 </body>
 </html>

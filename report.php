@@ -114,6 +114,10 @@ require_once 'config.php';
 
                 <label for="date-end"></label>
                 <input type="date" id="date-end" onchange="generateReport()">
+
+                <button class="export-btn" onclick="printReport()">
+                        <i class="fas fa-print"></i> Cetak Laporan
+                </button>
             </div>
 
                 <h2>Ringkasan Kinerja Periode</h2>
@@ -121,7 +125,7 @@ require_once 'config.php';
                 <div class="kpi-cards-container">
                     
                     <div class="report-summary-card primary-kpi">
-                        <p>Total Pendapatan Bersih</p>
+                        <p>Total Pendapatan</p>
                         <h3 id="total-income-display">Rp 0</h3>
                     </div>
 
@@ -134,7 +138,7 @@ require_once 'config.php';
                         <p>Rata-rata Nilai Transaksi</p>
                         <h3 id="avg-trans-display">Rp 0</h3>
                     </div>
-
+                </div>
                 </div>
                 </section>
         </main>

@@ -189,13 +189,13 @@ function printReceipt(transactionId) {
 }
 
 function printReport() {
-    // Ambil filter tanggal dari input
+    // Ambil filter tanggal yang sedang aktif
     const periodFilter = document.getElementById('period-filter').value;
-    const { start, end } = updateDateFilters(periodFilter); // Menggunakan fungsi yang sudah ada
+    const { start, end } = updateDateFilters(periodFilter); 
 
     const url = `cetak_laporan.php?start=${start}&end=${end}`; 
 
-    // Buka jendela baru untuk menampilkan dan mencetak laporan
+    // Buka jendela baru untuk menampilkan laporan
     const reportWindow = window.open(url, '_blank');
 
     if (reportWindow) {
