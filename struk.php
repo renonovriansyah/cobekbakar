@@ -1,5 +1,5 @@
 <?php
-// FILE: struk.php (FILE BARU UNTUK CETAK STRUK)
+// FILE: struk.php (FINAL UNTUK CETAK STRUK DENGAN DISKON TRANSPARAN)
 
 session_start();
 require_once 'config.php';
@@ -31,10 +31,12 @@ if (!$transaksi) {
     die("Transaksi tidak ditemukan.");
 }
 
-// 2. Query Detail Produk (Detail Transaksi)
+// 2. Query Detail Produk (Detail Transaksi) - Mengambil DISKON dari tabel produk
 $sql_detail = "
     SELECT 
-        dt.jumlah, dt.subtotal, p.nama_produk, p.harga
+        dt.jumlah, dt.subtotal, 
+        p.nama_produk, p.harga AS harga_satuan_normal, 
+        p.diskon_jual 
     FROM 
         detail_transaksi dt
     JOIN 
@@ -54,6 +56,29 @@ $conn->close();
 function formatRupiah($angka) {
     return 'Rp ' . number_format($angka, 0, ',', '.');
 }
+
+// INISIASI TOTAL AKHIR
+$total_diskon_transaksi = 0;
+$total_gross = 0;
+
+foreach ($detail_pesanan as &$item) {
+    // Menghitung harga normal dan potongan untuk setiap item
+    $harga_normal = $item['harga_satuan_normal'];
+    $qty = $item['jumlah'];
+    $persen_diskon = (float)$item['diskon_jual'];
+
+    $subtotal_gross_item = $harga_normal * $qty;
+    $potongan_diskon_item = ($subtotal_gross_item * $persen_diskon) / 100;
+    
+    // Menyimpan hasil perhitungan ke array item
+    $item['potongan_diskon'] = $potongan_diskon_item;
+
+    // Akumulasi total
+    $total_diskon_transaksi += $potongan_diskon_item;
+    $total_gross += $subtotal_gross_item;
+}
+unset($item); // Putus referensi
+
 ?>
 
 <!DOCTYPE html>
@@ -86,6 +111,13 @@ function formatRupiah($angka) {
         .summary-row { display: flex; justify-content: space-between; margin-top: 5px; }
         .summary-row.total { font-size: 1.1em; font-weight: bold; padding-top: 5px; border-top: 1px dashed #000; margin-top: 5px;}
         .detail { margin-bottom: 10px; }
+
+        .discount-detail {
+            margin-top: -3px; 
+            padding-left: 20px; /* Indentasi agar terlihat sebagai sub-item */
+            font-size: 0.9em;
+            color: #444; /* Sedikit lebih gelap dari teks utama */
+        }
         
         /* Media query memastikan elemen no-print hanya hilang saat mencetak */
         @media print {
@@ -115,23 +147,46 @@ function formatRupiah($angka) {
             <p><strong>No. Struk:</strong> TRX<?php echo str_pad($id_transaksi, 5, '0', STR_PAD_LEFT); ?></p>
         </div>
         
-        <div class="separator"></div>
-        
         <div class="item-list">
-            <?php foreach ($detail_pesanan as $item): ?>
-                <div class="item-row">
-                    <span class="item-name"><?php echo htmlspecialchars($item['nama_produk']); ?></span>
-                    <span class="item-details"><?php echo $item['jumlah']; ?> x <?php echo number_format($item['harga'], 0, ',', '.'); ?></span>
-                    <span class="item-subtotal"><?php echo formatRupiah($item['subtotal']); ?></span>
+        <?php foreach ($detail_pesanan as $item): ?>
+            
+            <div class="item-row">
+                <span class="item-name">
+                    <?php echo htmlspecialchars($item['nama_produk']); ?>
+                </span>
+                <span class="item-details"><?php echo $item['jumlah']; ?> x <?php echo number_format($item['harga_satuan_normal'], 0, ',', '.'); ?></span>
+                <span class="item-subtotal">
+                    <?php echo formatRupiah($item['subtotal']); ?>
+                </span>
+            </div>
+            
+            <?php if ($item['potongan_diskon'] > 0): ?>
+                <div class="summary-row discount-detail">
+                    <span style="font-style: italic;">Potongan Diskon (<?php echo (int)$item['diskon_jual']; ?>%)</span>
+                    <span style="text-align: right; color: #E76F51;">- <?php echo formatRupiah($item['potongan_diskon']); ?></span>
                 </div>
-            <?php endforeach; ?>
-        </div>
-        
-        <div class="separator"></div>
+            <?php endif; ?>
+            
+        <?php endforeach; ?>
+    </div>
+
+    <div class="separator"></div>
 
         <div class="summary">
+            <?php if ($total_diskon_transaksi > 0): ?>
+            <div class="summary-row">
+                <span>Subtotal (Normal)</span>
+                <span><?php echo formatRupiah($total_gross); ?></span>
+            </div>
+            <div class="summary-row" style="color: #E76F51; font-weight: bold;">
+                <span>Total Diskon</span>
+                <span>- <?php echo formatRupiah($total_diskon_transaksi); ?></span>
+            </div>
+            <div class="separator"></div>
+            <?php endif; ?>
+            
             <div class="summary-row total">
-                <span>TOTAL BELANJA</span>
+                <span>TOTAL BERSIH</span>
                 <span><?php echo formatRupiah($transaksi['total_biaya']); ?></span>
             </div>
             
