@@ -134,7 +134,28 @@ switch ($method) {
             echo json_encode(["success" => false, "message" => "ID Produk harus ditentukan."]);
             break;
         }
+        
+        // --- LOGIKA UTAMA: VERIFIKASI RIWAYAT TRANSAKSI ---
+        $sql_check = "SELECT COUNT(*) FROM detail_transaksi WHERE id_produk = ?";
+        $stmt_check = $conn->prepare($sql_check);
+        $stmt_check->bind_param("i", $id_produk);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result()->fetch_row();
+        $transaction_count = $result_check[0];
+        $stmt_check->close();
 
+        if ($transaction_count > 0) {
+            // FIX UX: Berikan pesan informatif ke frontend
+            http_response_code(409); // Conflict
+            echo json_encode([
+                "success" => false, 
+                "can_delete" => false, // Marker untuk JS
+                "message" => "GAGAL HAPUS: Produk ini sudah digunakan dalam $transaction_count transaksi dan tidak dapat dihapus. Silakan hubungi admin."
+            ]);
+            break;
+        }
+
+        // --- LANJUTKAN PROSES DELETE (Jika aman) ---
         $sql = "DELETE FROM produk WHERE id_produk = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_produk);
@@ -142,6 +163,7 @@ switch ($method) {
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Produk berhasil dihapus."]);
         } else {
+            // Error SQL umum
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "Gagal menghapus produk: " . $stmt->error]);
         }

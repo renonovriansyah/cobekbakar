@@ -102,7 +102,7 @@ function formatRupiah($angka) {
     <div class="receipt-container">
         <div class="header">
             <h3>COBEK BAKAR</h3>
-            <p>Jl. Mulu Jadian Kagak No. 123, Jambi</p>
+            <p>Jl. Mulu Jadian Enggak No. 01 Di Hatiku, Jambi</p>
             <p>Telp: 0812-3456-7890</p>
         </div>
         

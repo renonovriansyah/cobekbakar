@@ -164,16 +164,23 @@ async function deleteProduct(productId, productName) {
             method: 'DELETE'
         });
 
-        const result = await response.json();
+        // Selalu coba baca JSON, bahkan jika status code 409
+        const result = await response.json(); 
 
         if (result.success) {
             alert(result.message);
-            loadProducts(); // Muat ulang tabel
+            loadProducts(); 
+        } else if (result.can_delete === false) {
+            // FIX UTAMA: Menampilkan pesan informatif dari backend
+            alert(result.message); 
+            
         } else {
-            alert("Penghapusan GAGAL: " + result.message);
+            // Menangkap error umum (misalnya 500, SQL error)
+            alert("Penghapusan GAGAL: " + (result.message || "Terjadi kesalahan server yang tidak terduga."));
         }
 
     } catch (error) {
+        // Ini adalah error "Koneksi gagal" yang TIDAK informatif (hanya jika AJAX gagal terhubung sama sekali)
         alert("Koneksi gagal saat menghapus produk.");
     }
 }
