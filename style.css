@@ -477,9 +477,14 @@ header h1 {
 }
 
 .report-controls {
-    /* ... (properti lama: display: flex, gap, padding, dll.) ... */
-    justify-content: space-between; /* Untuk memisahkan filter dan tombol aksi */
-    align-items: center;
+    display: flex;
+    justify-content: space-between; /* Space out filter group and action group */
+    align-items: center; /* Crucial: Vertically center everything */
+    gap: 15px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Penataan Khusus untuk Tombol Tampilkan & Cetak */
@@ -515,9 +520,11 @@ header h1 {
 .report-controls input[type="date"],
 .report-controls select {
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    height: 40px; /* Tinggi seragam */
+    height: 40px; /* Standardize height for alignment */
+    font-size: 1em;
+    cursor: pointer;
 }
 
 /* Penataan Khusus Tombol (Memastikan lebar terkontrol) */
@@ -525,10 +532,10 @@ header h1 {
     height: 40px; 
     padding: 0 15px; 
     font-size: 1em;
-    /* Tambahan: Pastikan tombol Tampilkan tidak menggunakan seluruh ruang */
-    flex-shrink: 0; 
-    min-width: 120px;
-    box-sizing: border-box;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 /* Tambahan agar tombol Cetak Laporan terlihat berbeda */
