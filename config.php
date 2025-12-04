@@ -3,10 +3,10 @@
 
 // Kebutuhan Database: MySQL dan localhost 
 
-define('DB_SERVER', 'localhost'); // Host server database (localhost sesuai SRS)
-define('DB_USERNAME', 'root');   // Ganti dengan username database Anda
-define('DB_PASSWORD', '');       // Ganti dengan password database Anda
-define('DB_NAME', 'db_kasir_cobekbakar'); // Nama database yang dibuat di atas
+define('DB_SERVER', 'sql100.infinityfree.com'); 
+define('DB_USERNAME', 'if0_40595163');  
+define('DB_PASSWORD', 'Gzfljq0np20K'); 
+define('DB_NAME', 'if0_40595163_db_kasircobekbakar');
 
 // 1. Buat Koneksi
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
